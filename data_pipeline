@@ -329,7 +329,382 @@ print(f"Saved: {CSV_PATH}")
 
 
 
+#Create SQLite database
 
+conn = sqlite3.connect(DB_PATH)
+
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS categories (
+    category_id INTEGER PRIMARY KEY,
+    category_name TEXT UNIQUE NOT NULL
+);
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS books (
+    book_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    price_gbp REAL NOT NULL,
+    price_inr REAL NOT NULL,
+    rating INTEGER NOT NULL,
+    in_stock INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY (category_id)
+        REFERENCES categories(category_id)
+);
+""")
+
+conn.commit()
+
+print("SQLite schema created.")
+
+
+
+categories_df = (
+    df_final[["category"]]
+    .drop_duplicates()
+    .sort_values("category")
+    .reset_index(drop=True)
+)
+
+categories_df["category_id"] = (
+    categories_df.index + 1
+)
+
+categories_df = categories_df[
+    ["category_id", "category"]
+]
+
+categories_df
+
+
+
+categories_df.rename(
+    columns={"category": "category_name"}
+).to_sql(
+    "categories",
+    conn,
+    if_exists="append",
+    index=False
+)
+
+
+
+category_lookup = dict(
+    zip(
+        categories_df["category"],
+        categories_df["category_id"]
+    )
+)
+
+df_final["category_id"] = (
+    df_final["category"]
+    .map(category_lookup)
+)
+
+
+
+books_to_insert = df_final[
+    [
+        "title",
+        "price_gbp",
+        "price_inr",
+        "rating",
+        "in_stock",
+        "category_id"
+    ]
+].copy()
+
+books_to_insert["in_stock"] = (
+    books_to_insert["in_stock"]
+    .astype(int)
+)
+
+books_to_insert.to_sql(
+    "books",
+    conn,
+    if_exists="append",
+    index=False
+)
+
+conn.commit()
+
+print("Books inserted into SQLite.")
+
+
+
+print(
+    pd.read_sql(
+        "SELECT COUNT(*) AS book_count FROM books;",
+        conn
+    )
+)
+
+print(
+    pd.read_sql(
+        "SELECT COUNT(*) AS category_count FROM categories;",
+        conn
+    )
+)
+
+
+#SQL Query 
+
+query_1 = """
+SELECT title, price_gbp, rating
+FROM books
+WHERE rating >= 4;
+"""
+
+result_1 = pd.read_sql(query_1, conn)
+
+print(query_1)
+display(result_1.head(10))
+
+
+#SQL Query 2 — ORDER BY + LIMIT
+
+query_2 = """
+SELECT title, price_gbp, rating
+FROM books
+ORDER BY price_gbp DESC
+LIMIT 10;
+"""
+
+result_2 = pd.read_sql(query_2, conn)
+
+print(query_2)
+display(result_2)
+
+
+#SQL Query 3 — DISTINCT
+
+query_3 = """
+SELECT DISTINCT rating
+FROM books
+ORDER BY rating;
+"""
+
+result_3 = pd.read_sql(query_3, conn)
+
+print(query_3)
+display(result_3)
+
+
+#SQL Query 4 — BETWEEN
+
+query_4 = """
+SELECT title, price_gbp, price_inr
+FROM books
+WHERE price_gbp BETWEEN 20 AND 40
+ORDER BY price_gbp;
+"""
+
+result_4 = pd.read_sql(query_4, conn)
+
+print(query_4)
+display(result_4)
+
+
+
+# SQL Query 5 — IN
+
+query_5 = """
+SELECT title, rating, category_id
+FROM books
+WHERE rating IN (4, 5)
+ORDER BY rating DESC;
+"""
+
+result_5 = pd.read_sql(query_5, conn)
+
+print(query_5)
+display(result_5.head(10))
+
+
+#SQL Query 6 — JOIN
+
+query_6 = """
+SELECT
+    b.title,
+    c.category_name,
+    b.price_gbp,
+    b.price_inr,
+    b.rating,
+    b.in_stock
+FROM books AS b
+JOIN categories AS c
+    ON b.category_id = c.category_id
+ORDER BY b.rating DESC, b.price_gbp DESC
+LIMIT 10;
+"""
+
+result_6_sql = pd.read_sql(query_6, conn)
+
+print(query_6)
+display(result_6_sql)
+
+
+#Read at least two SQL results with pd.read_sql
+
+result_1 = pd.read_sql(query_1, conn)
+result_2 = pd.read_sql(query_2, conn)
+
+sql_result_a = pd.read_sql(query_1, conn)
+sql_result_b = pd.read_sql(query_2, conn)
+
+print("Query 1 result:")
+display(sql_result_a.head())
+
+print("Query 2 result:")
+display(sql_result_b.head())
+
+
+#Reproduce JOIN using pd.merge
+
+books_memory = df_final[
+    [
+        "title",
+        "price_gbp",
+        "price_inr",
+        "rating",
+        "in_stock",
+        "category_id"
+    ]
+].copy()
+
+categories_memory = categories_df.rename(
+    columns={
+        "category": "category_name"
+    }
+)
+
+merged_result = pd.merge(
+    books_memory,
+    categories_memory,
+    on="category_id",
+    how="inner"
+)
+
+merged_result = merged_result[
+    [
+        "title",
+        "category_name",
+        "price_gbp",
+        "price_inr",
+        "rating",
+        "in_stock"
+    ]
+]
+
+merged_result = (
+    merged_result
+    .sort_values(
+        ["rating", "price_gbp"],
+        ascending=[False, False]
+    )
+    .head(10)
+)
+
+display(merged_result)
+
+
+
+#Compare SQL JOIN vs pandas JOIN
+
+sql_join_comparison = result_6_sql.copy()
+
+pandas_join_comparison = merged_result.copy()
+
+sql_join_comparison = sql_join_comparison.reset_index(drop=True)
+pandas_join_comparison = pandas_join_comparison.reset_index(drop=True)
+
+print("SQL JOIN result:")
+display(sql_join_comparison)
+
+print("Pandas merge result:")
+display(pandas_join_comparison)
+
+
+comparison = sql_join_comparison.equals(
+    pandas_join_comparison
+)
+
+print("Do SQL JOIN and pandas merge produce equivalent results?", comparison)
+
+#Database schema verification
+
+schema_query = """
+SELECT
+    name,
+    sql
+FROM sqlite_master
+WHERE type = 'table'
+ORDER BY name;
+"""
+
+schema = pd.read_sql(schema_query, conn)
+
+display(schema)
+
+
+#Foreign-key verification
+
+foreign_key_query = """
+PRAGMA foreign_key_list(books);
+"""
+
+foreign_keys = pd.read_sql(
+    foreign_key_query,
+    conn
+)
+
+display(foreign_keys)
+
+#Final validation
+
+print("========== FINAL VALIDATION ==========")
+
+print("Total books:", len(df_final))
+print("Total categories:", df_final["category"].nunique())
+
+print(
+    "Price GBP type:",
+    df_final["price_gbp"].dtype
+)
+
+print(
+    "Price INR type:",
+    df_final["price_inr"].dtype
+)
+
+print(
+    "Rating type:",
+    df_final["rating"].dtype
+)
+
+print(
+    "In-stock type:",
+    df_final["in_stock"].dtype
+)
+
+print(
+    "GBP → INR rate:",
+    GBP_TO_INR
+)
+
+print(
+    "SQL/Pandas JOIN equivalent:",
+    comparison
+)
+
+#Close the database
+
+conn.close()
+
+print("Database connection closed.")
 
 
 
