@@ -1,1 +1,93 @@
+!pip install requests
+!pip install beautifulsoup4
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import requests
+from bs4 import BeautifulSoup
+import sqlite3
+import re
+from pathlib import Path
+print("Libraries imported successfully.")
+BASE_URL = "https://books.toscrape.com/catalogue/"
+START_URL = "https://books.toscrape.com/catalogue/page-1.html"
+
+GBP_TO_INR = 105.50
+
+OUTPUT_DIR = Path(".")
+DB_PATH = OUTPUT_DIR / "books.db"
+CSV_PATH = OUTPUT_DIR / "books_cleaned.csv"
+
+print(f"Fixed conversion rate: 1 GBP = {GBP_TO_INR} INR")
+
+def fetch_page(url):
+    """
+    Download a web page and return its BeautifulSoup object.
+    Raises an error for unsuccessful HTTP responses.
+    """
+    
+    response = requests.get(
+        url,
+        timeout=15,
+        headers={
+            "User-Agent": "Mozilla/5.0"
+        }
+    )
+    
+    response.raise_for_status()
+
+soup = fetch_page(START_URL)
+
+print("Page title:", soup.title.get_text(strip=True))
+
+def scrape_listing_page(url):
+    soup = fetch_page(url)
+    
+    books = []
+    
+    for article in soup.select("article.product_pod"):
+        
+        title_element = article.select_one("h3 a")
+        price_element = article.select_one(".price_color")
+        rating_element = article.select_one(".star-rating")
+        availability_element = article.select_one(".availability")
+        
+        title = title_element.get("title", "").strip()
+        price = price_element.get_text(strip=True)
+        rating = " ".join(rating_element.get("class", []))
+        availability = availability_element.get_text(" ", strip=True)
+        
+        books.append({
+            "title": title,
+            "price": price,
+            "star_rating": rating,
+            "availability": availability
+        })
+    
+    return books
+
+all_books = []
+
+for page_number in range(1, 6):
+    
+    url = f"https://books.toscrape.com/catalogue/page-{page_number}.html"
+    
+    page_books = scrape_listing_page(url)
+    
+    all_books.extend(page_books)
+    
+    print(
+        f"Page {page_number}: "
+        f"{len(page_books)} books scraped"
+    )for i, book in enumerate(all_books):
+    
+    book["category"] = get_category(book["product_url"])
+    
+    if (i + 1) % 10 == 0:
+        print(f"Processed category for {i + 1}/{len(all_books)} books")
+
+print()
+print("Total books scraped:", len(all_books))
+    return BeautifulSoup(response.text, "html.parser")
 
