@@ -152,6 +152,71 @@ Then open:
 
 data_pipeline/data_pipeline.ipynb
 
+
+
+
+# Module 2 — Analytics Pipeline
+
+## 1. Dataset
+
+## 2. Raw Dataset Loading
+
+## 3. Missing Value Analysis
+
+## 4. Missing Value Decisions
+
+## 5. Univariate Analysis
+
+### Age
+### Fare
+### IQR Outliers
+### Fare Distribution
+
+## 6. Bivariate Analysis
+
+### Survival by Sex
+### Survival by Passenger Class
+### Survival by Sex and Class
+
+## 7. Correlation Analysis
+
+### Strongest Correlation 1
+### Strongest Correlation 2
+
+## 8. Multivariate Data Story
+
+### Chart 1 Interpretation
+### Chart 2 Interpretation
+### Chart 3 Interpretation
+### Chart 4 Interpretation
+
+## 9. Standardization Check
+
+## 10. Train/Test Split
+
+## 11. Preprocessing
+
+## 12. Classification Models
+
+## 13. Classification Evaluation
+
+## 14. Class Imbalance
+
+## 15. Random Forest GridSearchCV
+
+## 16. Regression
+
+## 17. Model Comparison
+
+## 18. Final Recommendation
+
+## 19. Saved Pipeline
+
+## 20. How to Run
+
+
+
+
 Run all cells from top to bottom.
 
 Alternatively, run the Python script:
