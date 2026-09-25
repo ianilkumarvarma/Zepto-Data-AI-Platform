@@ -28,4 +28,276 @@ df.to_csv("titanic.csv", index=False)
 print("Offline fallback saved as titanic.csv")
 
 
+#Profile the dataset
+
+print("===== INFO =====")
+df.info()
+
+print("\n===== DESCRIBE =====")
+display(df.describe(include="all"))
+
+print("\n===== SHAPE =====")
+print(df.shape)
+
+#Calculate missing percentages
+
+
+missing = df.isnull().sum()
+
+missing_percentage = (
+    df.isnull().mean() * 100
+).round(2)
+
+missing_report = pd.DataFrame({
+    "missing_count": missing,
+    "missing_percentage": missing_percentage
+})
+
+missing_report = missing_report[
+    missing_report["missing_count"] > 0
+]
+
+display(missing_report)
+
+
+#Apply the required missing-value rule
+
+
+df_clean = df.copy()
+
+missing_pct = df_clean.isnull().mean() * 100
+
+print("Missing-value percentages:")
+print(missing_pct[missing_pct > 0].sort_values(ascending=False))
+
+
+df_clean = df.copy()
+
+missing_pct = df_clean.isnull().mean() * 100
+
+print("Missing-value percentages:")
+print(missing_pct[missing_pct > 0].sort_values(ascending=False))
+
+
+#Verify cleaning
+
+print("Remaining missing values:")
+display(
+    df_clean.isnull().sum()
+)
+
+#Age histogram
+
+plt.figure(figsize=(8, 5))
+
+sns.histplot(
+    df_clean["age"],
+    bins=30,
+    kde=True
+)
+
+plt.title("Age Distribution")
+plt.xlabel("Age")
+plt.ylabel("Count")
+plt.tight_layout()
+
+plt.savefig("charts/age_histogram.png")
+plt.show()
+
+#. Age box plot
+
+plt.figure(figsize=(8, 4))
+
+sns.boxplot(
+    x=df_clean["age"]
+)
+
+plt.title("Age Box Plot")
+plt.xlabel("Age")
+plt.tight_layout()
+
+plt.savefig("charts/age_boxplot.png")
+plt.show()
+
+
+#Fare histogram
+
+plt.figure(figsize=(8, 5))
+
+sns.histplot(
+    df_clean["fare"],
+    bins=30,
+    kde=True
+)
+
+plt.title("Fare Distribution")
+plt.xlabel("Fare")
+plt.ylabel("Count")
+plt.tight_layout()
+
+plt.savefig("charts/fare_histogram.png")
+plt.show()
+
+
+#Fare box plot
+
+plt.figure(figsize=(8, 4))
+
+sns.boxplot(
+    x=df_clean["fare"]
+)
+
+plt.title("Fare Box Plot")
+plt.xlabel("Fare")
+plt.tight_layout()
+
+plt.savefig("charts/fare_boxplot.png")
+plt.show()
+
+
+#Calculate IQR outliers
+
+def count_iqr_outliers(series):
+    
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+    
+    iqr = q3 - q1
+    
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+    
+    outliers = series[
+        (series < lower_bound) |
+        (series > upper_bound)
+    ]
+    
+    return {
+        "Q1": q1,
+        "Q3": q3,
+        "IQR": iqr,
+        "lower_bound": lower_bound,
+        "upper_bound": upper_bound,
+        "outlier_count": len(outliers)
+    }
+
+
+age_outliers = count_iqr_outliers(df_clean["age"])
+fare_outliers = count_iqr_outliers(df_clean["fare"])
+
+print("AGE OUTLIERS")
+print(age_outliers)
+
+print("\nFARE OUTLIERS")
+print(fare_outliers)
+
+
+#Fare mean, median and mode
+
+fare_mean = df_clean["fare"].mean()
+fare_median = df_clean["fare"].median()
+fare_mode = df_clean["fare"].mode()[0]
+
+print("Fare Mean:", fare_mean)
+print("Fare Median:", fare_median)
+print("Fare Mode:", fare_mode)
+
+
+#Survival by sex
+female_survival = (
+    df_clean[df_clean["sex"] == "female"]["survived"].mean()
+)
+
+male_survival = (
+    df_clean[df_clean["sex"] == "male"]["survived"].mean()
+)
+
+print("Female survival rate:", female_survival)
+print("Male survival rate:", male_survival)
+
+print(
+    f"Female: {female_survival * 100:.2f}%"
+)
+
+print(
+    f"Male: {male_survival * 100:.2f}%"
+)
+
+
+#Survival by pclass
+
+for pclass in sorted(df_clean["pclass"].unique()):
+    
+    rate = df_clean[
+        df_clean["pclass"] == pclass
+    ]["survived"].mean()
+    
+    print(
+        f"Class {pclass}: {rate * 100:.2f}%"
+    )
+
+
+#Survival by sex AND class
+
+for sex in df_clean["sex"].unique():
+    
+    for pclass in sorted(df_clean["pclass"].unique()):
+        
+        subset = df_clean[
+            (df_clean["sex"] == sex) &
+            (df_clean["pclass"] == pclass)
+        ]
+        
+        rate = subset["survived"].mean()
+        
+        print(
+            f"{sex}, Class {pclass}: "
+            f"{rate * 100:.2f}%"
+        )
+
+
+#Correlation matrix — exactly six columns
+
+correlation_columns = [
+    "survived",
+    "pclass",
+    "age",
+    "sibsp",
+    "parch",
+    "fare"
+]
+
+corr = df_clean[
+    correlation_columns
+].corr()
+
+display(corr)
+
+
+#Correlation heatmap
+
+plt.figure(figsize=(9, 7))
+
+sns.heatmap(
+    corr,
+    annot=True,
+    fmt=".2f",
+    cmap="coolwarm",
+    center=0
+)
+
+plt.title("Titanic Numeric Feature Correlation")
+plt.tight_layout()
+
+plt.savefig("charts/correlation_heatmap.png")
+plt.show()
+
+
+
+
+
+
+
+
+
 
