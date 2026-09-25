@@ -292,7 +292,109 @@ plt.tight_layout()
 plt.savefig("charts/correlation_heatmap.png")
 plt.show()
 
+#Automatically find the two strongest correlations
 
+corr_pairs = []
+
+for i in range(len(corr.columns)):
+    
+    for j in range(i + 1, len(corr.columns)):
+        
+        feature_1 = corr.columns[i]
+        feature_2 = corr.columns[j]
+        coefficient = corr.iloc[i, j]
+        
+        corr_pairs.append({
+            "feature_1": feature_1,
+            "feature_2": feature_2,
+            "correlation": coefficient,
+            "absolute_correlation": abs(coefficient)
+        })
+
+corr_pairs_df = pd.DataFrame(corr_pairs)
+
+strongest_two = (
+    corr_pairs_df
+    .sort_values(
+        "absolute_correlation",
+        ascending=False
+    )
+    .head(2)
+)
+
+display(strongest_two)
+
+
+#Multivariate data story — at least 4 charts
+
+#Chart 1 - Survival by sex
+
+plt.figure(figsize=(7, 5))
+
+sns.barplot(
+    data=df_clean,
+    x="sex",
+    y="survived"
+)
+
+plt.title("Survival Rate by Sex")
+plt.ylabel("Survival Rate")
+
+plt.tight_layout()
+plt.savefig("charts/survival_by_sex.png")
+plt.show()
+
+#Chart 2 - Survival by passenger class
+
+plt.figure(figsize=(7, 5))
+
+sns.barplot(
+    data=df_clean,
+    x="pclass",
+    y="survived"
+)
+
+plt.title("Survival Rate by Passenger Class")
+plt.ylabel("Survival Rate")
+
+plt.tight_layout()
+plt.savefig("charts/survival_by_class.png")
+plt.show()
+
+Chart 3 - Sex + passenger class
+
+plt.figure(figsize=(8, 5))
+
+sns.barplot(
+    data=df_clean,
+    x="pclass",
+    y="survived",
+    hue="sex"
+)
+
+plt.title("Survival Rate by Sex and Passenger Class")
+plt.ylabel("Survival Rate")
+
+plt.tight_layout()
+plt.show()
+
+
+
+#Chart 4 - Age distribution by survival
+
+plt.figure(figsize=(8, 5))
+
+sns.boxplot(
+    data=df_clean,
+    x="survived",
+    y="age"
+)
+
+plt.title("Age Distribution by Survival")
+plt.xlabel("Survived")
+
+plt.tight_layout()
+plt.show()
 
 
 
