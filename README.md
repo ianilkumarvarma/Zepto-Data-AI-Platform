@@ -136,3 +136,34 @@ The SQL query results are displayed in the notebook.
 At least two SQL query results are read into pandas using `pd.read_sql()`.
 
 The JOIN result is independently reproduced using `pandas.merge()` and the two results are compared for equivalence.
+
+Installation
+
+From the repository root:
+
+pip install -r requirements.txt
+Running the Pipeline
+
+Open the notebook:
+
+jupyter notebook
+
+Then open:
+
+data_pipeline/data_pipeline.ipynb
+
+Run all cells from top to bottom.
+
+Alternatively, run the Python script:
+
+python data_pipeline.py
+
+The pipeline creates:
+
+books.db
+books_cleaned.csv
+Reproducibility
+
+The pipeline does not require manual copy-pasting of scraped data.
+
+Running the notebook/script from scratch downloads the source pages, performs the cleaning and conversion steps, creates the SQLite schema and populates the database automatically.
