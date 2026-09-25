@@ -93,3 +93,83 @@ Critical non-numeric fields such as title, category and availability are dropped
 
 This prevents individual malformed records from crashing the complete pipeline.
 
+## SQLite Schema
+
+The database contains two normalized tables.
+
+### categories
+
+```text
+category_id INTEGER PRIMARY KEY
+category_name TEXT UNIQUE
+```
+
+### books
+
+```text
+book_id INTEGER PRIMARY KEY
+title TEXT
+price_gbp REAL
+price_inr REAL
+rating INTEGER
+in_stock INTEGER
+category_id INTEGER FOREIGN KEY
+```
+
+The `books.category_id` column references `categories.category_id`.
+
+## SQL Analysis
+
+The notebook demonstrates:
+
+* `SELECT`
+* `WHERE`
+* `ORDER BY`
+* `LIMIT`
+* `DISTINCT`
+* `BETWEEN`
+* `IN`
+* `JOIN`
+
+The SQL query results are displayed in the notebook.
+
+At least two SQL query results are read into pandas using `pd.read_sql()`.
+
+The JOIN result is independently reproduced using `pandas.merge()` and the two results are compared for equivalence.
+
+## Installation
+
+From the repository root:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Running the Pipeline
+
+Open the notebook:
+
+```bash
+jupyter notebook
+```
+
+Then open:
+
+```text
+data_pipeline/data_pipeline.ipynb
+```
+
+Run all cells from top to bottom.
+
+Alternatively, run the Python script:
+
+```bash
+python data_pipeline.py
+```
+
+The pipeline creates:
+
+```text
+books.db
+books_cleaned.csv
+```
