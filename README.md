@@ -208,7 +208,7 @@ data_pipeline/data_pipeline.ipynb
 
 ## 17. Model Comparison
 
-## 18. Final Recommendation
+## 18. Final Recommendation -Random forest model proved as good modell due to more accuracy and more recall vaules predected comare to other models.
 
 ## 19. Saved Pipeline
 
