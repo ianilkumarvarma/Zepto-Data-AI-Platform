@@ -211,24 +211,3 @@ data_pipeline/data_pipeline.ipynb
 ## 18. Final Recommendation -Random forest model proved as good modell due to more accuracy and more recall vaules predected comare to other models.
 
 ## 19. Saved Pipeline
-
-## 20. How to Run
-
-
-
-
-Run all cells from top to bottom.
-
-Alternatively, run the Python script:
-
-python data_pipeline.py
-
-The pipeline creates:
-
-books.db
-books_cleaned.csv
-Reproducibility
-
-The pipeline does not require manual copy-pasting of scraped data.
-
-Running the notebook/script from scratch downloads the source pages, performs the cleaning and conversion steps, creates the SQLite schema and populates the database automatically.
